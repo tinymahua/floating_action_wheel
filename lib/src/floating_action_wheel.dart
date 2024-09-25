@@ -8,7 +8,7 @@ enum WheelAnimationType{
   around,center,none,@deprecated apacheRotor
 }
 enum WheelSize{
-  wheel_small_90,wheel_medium_120,wheel_large_150
+  wheel_tiny_60, wheel_small_90,wheel_medium_120,wheel_large_150,
 }
 
 
@@ -18,19 +18,20 @@ enum WheelSize{
 /// made by :: Kapp-99
 class FloatingActionWheel extends StatefulWidget {
 
-
   FloatingActionWheel(
       {Key? key, required this.buttons, this.animationType = WheelAnimationType.around,
         this.wheelSize = WheelSize.wheel_medium_120,this.defaultPressed=false,
         this.angleOffset = 90.0, this.visiblePart = 1, this.separated = false,
-        this.fabBackgroundColor,this.fabForegroundColor,this.fabHeroTag,this.fabElevation=0
+        this.fabBackgroundColor,this.fabForegroundColor,this.fabHeroTag,this.fabElevation=0,
+        this.extraData = null, this.onFloatingButtonPressed = null,
       }):
         assert( buttons.isNotEmpty,'WheelButton list should not be empty'),
         assert(visiblePart >= 0.1 && visiblePart <= 1, 'visiblePart can only range from 0.1 to 1 (percentage)'),
         assert(angleOffset >= 0 && angleOffset <= 360, 'angleOffset should only be a degree (0-360)'),
         super(key: key);
 
-
+  final dynamic extraData;
+  final void Function(dynamic extraData)? onFloatingButtonPressed;
 
   ///   List<WheelButton> [buttons] (required) (Non-empty) a list of [WheelButton] to display on the immersive wheel
   final List<WheelButton> buttons;
@@ -104,12 +105,12 @@ class FloatingActionWheel extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    return new _FloatingActionWheelState();
+    return new FloatingActionWheelState();
   }
 
 }
 
-class _FloatingActionWheelState extends State<FloatingActionWheel> {
+class FloatingActionWheelState extends State<FloatingActionWheel> {
 
   late bool _isPressed;
   double _size=0;
@@ -195,6 +196,9 @@ class _FloatingActionWheelState extends State<FloatingActionWheel> {
     return FloatingActionButton(
       heroTag: widget.fabHeroTag,
       onPressed: () {
+        if (widget.onFloatingButtonPressed != null){
+          widget.onFloatingButtonPressed!(widget.extraData);
+        }
         if(!widget.defaultPressed) {
           setState(() {
             if (!_isPressed) {
@@ -216,6 +220,14 @@ class _FloatingActionWheelState extends State<FloatingActionWheel> {
     );
   }
 
+  closeFAB(){
+    if (_isPressed){
+      _overlayEntry.remove();
+      setState(() {
+        _isPressed = !_isPressed;
+      });
+    }
+  }
 
   OverlayEntry _createOverlayEntry() {
 
@@ -287,6 +299,10 @@ class _FloatingActionWheelState extends State<FloatingActionWheel> {
     getImage();
 
     switch (widget.wheelSize) {
+      case WheelSize.wheel_tiny_60:
+        _size = 60;
+        _stroke = 60;
+        break;
       case WheelSize.wheel_small_90:
         _size = 90;
         _stroke = 80;
